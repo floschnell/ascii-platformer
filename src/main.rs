@@ -94,7 +94,7 @@ fn walk(player: &mut Player, dir: i8) {
 
 fn jump(player: &mut Player) {
   if player.on_ground {
-    player.speed_y = -0.5;
+    player.speed_y = -0.65;
   }
 }
 
@@ -111,12 +111,12 @@ fn simulate(world: &World, player: &mut Player) {
   player.x = player.x + player.speed_x;
   if player.on_ground {
     if player.walking {
-      player.speed_x = player.speed_x + player.walking_dir as f32 * 0.1;
+      player.speed_x = player.speed_x + player.walking_dir as f32 * 0.15;
       if player.speed_x.abs() > 1.0 {
         player.speed_x = player.walking_dir as f32 * 1.0;
       }
     } else {
-      player.speed_x = player.speed_x * 0.8;
+      player.speed_x = player.speed_x * 0.85;
     }
     if player.speed_x.abs() < 0.1 {
       player.speed_x = 0.0;
