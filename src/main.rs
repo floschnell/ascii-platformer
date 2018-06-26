@@ -2,6 +2,7 @@ extern crate termion;
 use std::error::Error;
 use std::fs::File;
 use std::io::{stdout, Read, Write};
+use termion::color::{Bg, Fg, Rgb};
 use termion::raw::IntoRawMode;
 
 struct Display {
@@ -69,6 +70,9 @@ fn main() {
   };
 
   load_level(&mut world, &mut player);
+
+  // hide cursor
+  write!(stdout, "{}", termion::cursor::Hide);
 
   loop {
     match stdin.next() {
@@ -197,15 +201,15 @@ fn simulate(world: &World, player: &mut Player) {
   // calculate next
   if player.on_ground {
     if player.walking {
-      player.speed_x = player.speed_x + player.walking_dir as f32 * 0.15;
+      player.speed_x = player.speed_x + player.walking_dir as f32 * 0.25;
     } else {
-      player.speed_x = player.speed_x * 0.85;
+      player.speed_x = player.speed_x * 0.75;
     }
   } else {
     if player.walking {
-      player.speed_x = player.speed_x + player.walking_dir as f32 * 0.15;
+      player.speed_x = player.speed_x + player.walking_dir as f32 * 0.1;
     } else {
-      player.speed_x = player.speed_x * 0.99;
+      player.speed_x = player.speed_x * 0.95;
     }
   }
 
@@ -249,17 +253,37 @@ fn draw(
     let mut cur_line = String::new();
     for x in display.left..(display.left + width_max as usize) {
       if x == player.x as usize && y == player.y as usize {
-        cur_line.push_str("@");
+        cur_line.push_str(&format!("{}", Fg(termion::color::White)));
+        cur_line.push_str(&format!("{}", Bg(termion::color::Black)));
+        cur_line.push('@');
       } else {
-        cur_line.push(world.mat[y as usize][x as usize]);
+        let part = world.mat[y as usize][x as usize];
+        let (fg, bg): (Box<termion::color::Color>, Box<termion::color::Color>) = match part {
+          '#' => (
+            Box::new(termion::color::White),
+            Box::new(termion::color::Black),
+          ),
+          ' ' => (
+            Box::new(termion::color::White),
+            Box::new(termion::color::Black),
+          ),
+          _ => (
+            Box::new(termion::color::Rgb(100, 100, 100)),
+            Box::new(termion::color::Black),
+          ),
+        };
+        cur_line.push_str(&format!("{}", Fg(fg.as_ref())));
+        cur_line.push_str(&format!("{}", Bg(bg.as_ref())));
+        cur_line.push(part);
       }
     }
-    buffer.push_str(cur_line.as_str());
+    buffer.push_str(&cur_line);
     if y < world.height as usize - 1 {
       buffer.push_str("\n\r");
     }
   }
   write!(stdout, "{}{}", termion::cursor::Goto(1, 1), buffer)?;
+  stdout.flush()?;
   Ok(())
 }
 
